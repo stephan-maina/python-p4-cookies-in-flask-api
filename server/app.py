@@ -1,30 +1,32 @@
-from flask import Flask, request, session, jsonify, make_response
+from flask import Flask, request, make_response
 
 app = Flask(__name__)
-app.json.compact = False
 
-app.secret_key = b'?w\x85Z\x08Q\xbdO\xb8\xa9\xb65Kj\xa9_'
+@app.route('/')
+def index():
+    # Get a cookie named 'user' if it exists, or set a default value if it doesn't
+    user = request.cookies.get('user', 'Liverpool FC')
+    return f'Hello, {user}!'
 
-@app.route('/sessions/<string:key>', methods=['GET'])
-def show_session(key):
+@app.route('/set_cookie/<username>')
+def set_cookie(username):
+    # Create a response object
+    response = make_response(f'Setting cookie for {username}')
+    
+    # Set a cookie named 'user' with the provided username
+    response.set_cookie('user', username)
+    
+    return response
 
-    session["hello"] = session.get("hello") or "World"
-    session["goodnight"] = session.get("goodnight") or "Moon"
-
-    response = make_response(jsonify({
-        'session': {
-            'session_key': key,
-            'session_value': session[key],
-            'session_accessed': session.accessed,
-        },
-        'cookies': [{cookie: request.cookies[cookie]}
-            for cookie in request.cookies],
-    }), 200)
-
-    response.set_cookie('mouse', 'Cookie')
-
+@app.route('/clear_cookie')
+def clear_cookie():
+    # Create a response object to clear the 'user' cookie
+    response = make_response('Cookie cleared')
+    
+    # Set the 'user' cookie with an empty value and an expiry date in the past to clear it
+    response.set_cookie('user', '', expires=0)
+    
     return response
 
 if __name__ == '__main__':
-    app.run(port=5555)
-    
+    app.run(debug=True)
